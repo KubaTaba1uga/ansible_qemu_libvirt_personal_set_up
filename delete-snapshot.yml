@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: yes
+  
+  vars:
+    vm_name: debian
+
+  vars_prompt:
+    - name: snapshot_name
+      prompt: Snapshot's name
+      default: fresh_install
+    
+  tasks:
+    - name: Ensure snapshot doesn't exsist.
+      block:
+        - name: Get snapshot.
+          command: "virsh snapshot-info --domain {{ vm_name }} --snapshotname {{ snapshot_name }}"
+          register: snapshot_list_cmd
+          ignore_errors: true
+          failed_when: snapshot_list_cmd.rc != 0
+          
+        - name: Delete snapshot.
+          command: "virsh snapshot-delete --domain {{ vm_name }} --snapshotname {{ snapshot_name }}"
+          when: not snapshot_list_cmd.failed 
