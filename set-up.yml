@@ -59,26 +59,46 @@
             value: 1
             state: present
 
-        - name: Ensure ipv6 packets forwarding is disabled.
+        - name: Ensure ipv6 packets forwarding is disabled part 1.
           sysctl:
             name: net.ipv6.conf.all.disable_ipv6
             value: 1
             state: present
 
+        - name: Ensure ipv6 packets forwarding is disabled part 2.
+          sysctl:
+            name: net.ipv6.conf.default.disable_ipv6
+            value: 1
+            state: present
+            
         - name: Ensure iptables-persistent is installed.
           package:
             name: iptables-persistent
             state: present
 
-        - name: Render iptables' rules.
+        - name: Render iptables' rules for ipv4.
           template:
             src: "./templates/iptables_rules"
             dest: "/etc/iptables/rules.v4"
-
-        - name: Restore rendered state of the firewall.
+            
+        - name: Render iptables' rules for ipv6.
+          template:
+            src: "./templates/iptables_rules_v6"
+            dest: "/etc/iptables/rules.v6"
+            
+        - name: Restore rendered state of the firewall for ipv4.
           community.general.iptables_state:
+            ip_version: ipv4
             state: restored
             path: "/etc/iptables/rules.v4"
+          async: "{{ ansible_timeout }}"
+          poll: 0
+
+        - name: Restore rendered state of the firewall for ipv6.
+          community.general.iptables_state:
+            ip_version: ipv6
+            state: restored
+            path: "/etc/iptables/rules.v6"
           async: "{{ ansible_timeout }}"
           poll: 0
           
