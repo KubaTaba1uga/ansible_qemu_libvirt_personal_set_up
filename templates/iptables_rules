@@ -58,6 +58,10 @@ COMMIT
 # Drop non-conforming packets, such as malformed headers, etc.
 -A INPUT -m conntrack --ctstate INVALID -j DROP
 
+# Drop PINGs not orginated from LAN
+-A INPUT -i enp1s0 -d 172.16.0.0/16 -p icmp -j DROP
+-A INPUT -i enp1s0 -d 172.31.0.0/16 -p icmp -j DROP
+
 # Block remote packets claiming to be from a loopback address.
 -4 -A INPUT -s 127.0.0.0/8 ! -i lo -j DROP
 -6 -A INPUT -s ::1/128 ! -i lo -j DROP
@@ -104,7 +108,7 @@ COMMIT
 -A INPUT -p tcp --dport 113 --syn -m conntrack --ctstate NEW -j REJECT --reject-with tcp-reset
 
 # Prevent DOS by filling log files.
--A INPUT -m limit --limit 1/second --limit-burst 100 -j LOG --log-prefix "iptables[DOS]: "
+-A INPUT -m limit --limit 1/minute --limit-burst 100 -j LOG --log-prefix "iptables[DOS]: " --log-level 3
 
 ######################## INPUT CONFIGURATION ##############################
 # Allow traffic from private network
@@ -112,7 +116,7 @@ COMMIT
 
 # Accept worldwide access to SSH and use SSHBRUTE chain for preventing 
 # brute-force attacks.
--A INPUT -p tcp --dport 22 --syn -m conntrack --ctstate NEW -j SSHBRUTE
+-A INPUT -i enp1s0 -p tcp --dport 22 --syn -m conntrack --ctstate NEW -j SSHBRUTE
 
 ######################## FORWARD CONFIGURATION ##############################
 # Allow established traffic to the subnets.
@@ -124,17 +128,13 @@ COMMIT
 # Allow traffic between virtual machines.
 -A FORWARD -i {{ private_bridge_interface }} -o {{ private_bridge_interface }} -j ACCEPT
 -A FORWARD -i {{ public_bridge_interface }} -o {{ public_bridge_interface }} -j ACCEPT
-# Reject everything else.
--A FORWARD -i {{ public_bridge_interface }} -j REJECT --reject-with icmp-port-unreachable
--A FORWARD -o {{ public_bridge_interface }} -j REJECT --reject-with icmp-port-unreachable
--A FORWARD -i {{ private_bridge_interface }} -j REJECT --reject-with icmp-port-unreachable
--A FORWARD -o {{ private_bridge_interface }} -j REJECT --reject-with icmp-port-unreachable
 
 ######################## DEBUG ##############################
 # -N LOGGING
 # -A INPUT -j LOGGING
 # -A FORWARD -j LOGGING
-# -A LOGGING -m limit --limit 2/min -j LOG --log-prefix "iptables[Dropped]: " --log-level 4
+# -A LOGGING -j LOG --log-prefix "iptables[Dropped]: " --log-level 7
 # -A LOGGING -j DROP
+
 
 COMMIT
