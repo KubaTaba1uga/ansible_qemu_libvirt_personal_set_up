@@ -14,11 +14,11 @@
     - name: Ensure snapshot exsists.
       block:
         - name: Get snapshot.
-          command: "virsh snapshot-info --domain {{ vm_name }} {{ snapshot_name }}"
+          command: "virsh snapshot-info --domain {{ vm_name }} --snapshotname {{ snapshot_name }}"
           register: snapshot_list_cmd
           ignore_errors: true
           failed_when: snapshot_list_cmd.rc != 0
           
         - name: Create snapshot.
-          command: "virsh snapshot-create-as --domain {{ vm_name }} {{ snapshot_name }} --atomic"
+          command: "virsh snapshot-create-as --domain {{ vm_name }} --name {{ snapshot_name }} --atomic"
           when: snapshot_list_cmd.failed 
