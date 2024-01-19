@@ -72,7 +72,9 @@
                                 --virt-type kvm
                                 --disk vol=images/{{ image }},bus=virtio
                                 --import
+                                --cloud-init disable=yes,user-data=/tmp/{{ configuration_script }}
                                 --noautoconsole
+                                
           register: vm
 
         - name: Ensure VM's booting on startup is configured.
