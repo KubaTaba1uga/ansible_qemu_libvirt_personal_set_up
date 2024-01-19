@@ -11,7 +11,7 @@
     autostart: false
     network: priv0br
     configuration_script: debian-12-cloud-init.yaml
-    disk_url: https://cdimage.debian.org/cdimage/cloud/bookworm/daily/20240119-1631/debian-12-generic-amd64-daily-20240119-1631.qcow2
+    disk_url: https://cdimage.debian.org/cdimage/cloud/bookworm/daily/20240119-1631/debian-12-generic-amd64-daily-20240119-1631.qcow2  
     
   tasks:                
     - name: Ensure VM's disk is ready.
@@ -21,10 +21,15 @@
             command: facts
 
         - name: Build VM's disk.
-          block:            
+          block: 
+            - name: Get public key
+              command: ssh-add -l
+              register: pub_key_cmd
+              
             - set_fact:
                 image: "{{ vm_name }}.qcow2"
                 disk_size_in_gb: "{{ disk_size }}G"
+                public_key: "{{ pub_key_cmd.stdout }}"
 
             - name: Copy VM's configuration script.
               template:
