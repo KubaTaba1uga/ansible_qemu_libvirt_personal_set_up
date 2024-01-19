@@ -10,19 +10,11 @@
     cpu_cores: 2
     autostart: false
     network: priv0br
-    configuration_script: configure_debian_12.sh
+    configuration_script: debian-12-cloud-init.yaml
+    disk_url: https://cdimage.debian.org/cdimage/cloud/bookworm/daily/20240119-1631/debian-12-generic-amd64-daily-20240119-1631.qcow2
     
-  tasks:
-    - name: Generate SSH key "id_rsa".
-      openssh_keypair:
-        path: "/home/{{ ansible_user }}/.ssh/id_rsa"
-        type: rsa
-        size: 4096
-        state: present
-        force: no
-        owner: "{{ ansible_user }}"
-                
-    - name: Ensure VM's disk is built.
+  tasks:                
+    - name: Ensure VM's disk is ready.
       block:
         - name: Gather facts about storage pools
           community.libvirt.virt_pool:
@@ -40,15 +32,16 @@
                 dest: "/tmp/{{ configuration_script }}"
                 mode: '0777'        
 
-            - name: Build VM's disk.
+            - name: Create VM's disk.
               when: image not in ansible_libvirt_pools.images.volumes
-              command: virt-builder {{ vm_template }}
-                                    --output /VMs/images/{{ image }}
-                                    --format qcow2
-                                    --size {{ disk_size_in_gb }}
-                                    --hostname {{ vm_name }}
-                                    --ssh-inject root:file:/home/{{ ansible_user }}/.ssh/id_rsa.pub
-                                    --firstboot /tmp/{{ configuration_script }}
+              block:
+                - name: Download base VM's disk.
+                  get_url:
+                    url: "{{ disk_url }}"
+                    dest: /tmp/{{ image }}
+
+                - name: Create VM's disk.
+                  command: qemu-img create -b /tmp/{{ image }} -f qcow2 -F qcow2 /VMs/images/{{ image }} {{ disk_size_in_gb }}
                                     
         - name: Refresh storage pool.
           community.libvirt.virt_pool:
