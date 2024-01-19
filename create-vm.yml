@@ -4,7 +4,7 @@
   
   vars:
     vm_name: debian
-    vm_template: debian-12
+    user: taba1uga
     disk_size: 30
     ram_size: 2048
     cpu_cores: 2
