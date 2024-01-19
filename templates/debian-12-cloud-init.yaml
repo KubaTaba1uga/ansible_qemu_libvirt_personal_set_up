@@ -7,4 +7,12 @@ users:
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     groups: sudo
     shell: /bin/bash
-    
+
+ssh_pwauth: false
+chpasswd:
+  expire: false
+  users:
+    - name: {{ user }}
+      password: password1
+      type: text
+

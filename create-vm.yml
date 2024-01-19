@@ -23,11 +23,9 @@
         - name: Build VM's disk.
           block: 
             - name: Get public key
-              command: ssh-add -l
+              command: ssh-add -L
               register: pub_key_cmd
 
-            - debug: var=pub_key_cmd
-              
             - set_fact:
                 image: "{{ vm_name }}.qcow2"
                 disk_size_in_gb: "{{ disk_size }}G"
