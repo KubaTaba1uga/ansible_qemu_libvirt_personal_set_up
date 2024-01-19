@@ -1,4 +1,5 @@
 #cloud-config
+hostname: {{ vm_name }}
 users:
   - name: {{ user }}
     ssh_authorized_keys:
