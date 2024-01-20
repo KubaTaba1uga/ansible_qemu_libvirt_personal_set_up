@@ -1,7 +1,6 @@
 ---
 - hosts: all
   become: yes
-  
   vars:
     vm_name: debian
     user: taba1uga
@@ -11,9 +10,9 @@
     autostart: false
     network: priv0br
     configuration_script: debian-12-cloud-init.yaml
-    disk_url: https://cdimage.debian.org/cdimage/cloud/bookworm/daily/20240119-1631/debian-12-generic-amd64-daily-20240119-1631.qcow2  
-    
-  tasks:                
+    disk_url: https://cdimage.debian.org/cdimage/cloud/bookworm/daily/20240119-1631/debian-12-generic-amd64-daily-20240119-1631.qcow2
+
+  tasks:
     - name: Ensure VM's disk is ready.
       block:
         - name: Gather facts about storage pools
@@ -21,8 +20,10 @@
             command: facts
 
         - name: Build VM's disk.
-          block: 
+          block:
             - name: Get public key
+              become: yes
+              become_user: "{{ ansible_user }}"
               command: ssh-add -L
               register: pub_key_cmd
 
@@ -35,7 +36,7 @@
               template:
                 src: "./templates/{{ configuration_script }}"
                 dest: "/tmp/{{ configuration_script }}"
-                mode: '0777'        
+                mode: '0777'
 
             - name: Create VM's disk.
               when: image not in ansible_libvirt_pools.images.volumes
@@ -72,7 +73,7 @@
                                 --virt-type kvm
                                 --disk vol=images/{{ image }},bus=virtio
                                 --import
-                                --cloud-init disable=yes,user-data=/tmp/{{ configuration_script }}
+                                --cloud-init disable=on,user-data=/tmp/{{ configuration_script }}
                                 --noautoconsole
                                 
           register: vm
