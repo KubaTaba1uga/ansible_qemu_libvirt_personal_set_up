@@ -23,7 +23,7 @@
           block:
             - name: Get public key
               become: yes
-              become_user: "{{ ansible_user }}"
+              become_user: "{{ user }}"
               command: ssh-add -L
               register: pub_key_cmd
 
@@ -47,8 +47,13 @@
                     dest: /tmp/{{ image }}
 
                 - name: Create VM's disk.
-                  command: qemu-img create -b /tmp/{{ image }} -f qcow2 -F qcow2 /VMs/images/{{ image }} {{ disk_size_in_gb }}
-                                    
+                  command: qemu-img resize -f qcow2 /tmp/{{ image }} {{ disk_size_in_gb }}
+
+                - name: Copy VM's disk.
+                  copy:
+                    src: /tmp/{{ image }}
+                    dest: /VMs/images/{{ image }}
+
         - name: Refresh storage pool.
           community.libvirt.virt_pool:
             command: refresh
@@ -59,8 +64,8 @@
         - name: List all VMs.
           community.libvirt.virt:
             command: list_vms
-          register: all_vms    
-          
+          register: all_vms
+
         - name: Create VM.
           when: vm_name not in all_vms.list_vms
           command: virt-install -n {{ vm_name }}
