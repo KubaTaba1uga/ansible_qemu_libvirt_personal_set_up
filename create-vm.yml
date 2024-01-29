@@ -21,16 +21,10 @@
 
         - name: Build VM's disk.
           block:
-            - name: Get public key
-              become: yes
-              become_user: "{{ user }}"
-              command: ssh-add -L
-              register: pub_key_cmd
-
             - set_fact:
                 image: "{{ vm_name }}.qcow2"
                 disk_size_in_gb: "{{ disk_size }}G"
-                public_key: "{{ pub_key_cmd.stdout }}"
+                public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICs4UJCWbQaX84vgFQcafh6WOcx8zsoKlkzp89zuQKXI cardno:000F 7F1E3E3A"
 
             - name: Copy VM's configuration script.
               template:
